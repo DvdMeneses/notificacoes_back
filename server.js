@@ -33,7 +33,7 @@ async function requireUser(req, res, next) {
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.post('/send', requireUser, async (req, res) => {
-  const { groupCode, deviceIds, title, body, fromDeviceId, messageId } = req.body || {};
+  const { groupCode, deviceIds, title, body, fromDeviceId, fromName, messageId, options } = req.body || {};
   if (typeof groupCode !== 'string' || !/^[A-Z0-9]{8,32}$/.test(groupCode)) {
     return res.status(400).json({ error: 'groupCode inválido' });
   }
@@ -56,12 +56,21 @@ app.post('/send', requireUser, async (req, res) => {
   }
 
   if (targets.length) {
+    // Mensagem "data-only": o app monta a notificação (popup + botões de resposta).
+    const payload = {
+      title: String(title || 'Nova mensagem').slice(0, 200),
+      body: body.slice(0, 2000),
+      options: JSON.stringify(Array.isArray(options) ? options.slice(0, 10).map(String) : []),
+      fromDeviceId: String(fromDeviceId || ''),
+      fromName: String(fromName || ''),
+      messageId: String(messageId || ''),
+      groupCode: String(groupCode),
+    };
     // Uma mensagem separada por aparelho, com resultado individual.
     const messages = targets.map(({ token }) => ({
       token,
-      notification: { title: String(title || 'Nova mensagem').slice(0, 200), body: body.slice(0, 2000) },
-      data: { fromDeviceId: String(fromDeviceId || ''), messageId: String(messageId || '') },
-      android: { priority: 'high', notification: { channelId: 'mensagens' } },
+      data: payload,
+      android: { priority: 'high' },
     }));
     const { responses } = await getMessaging().sendEach(messages);
 
