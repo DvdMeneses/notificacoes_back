@@ -1,0 +1,14 @@
+# Render Blueprint: New + > Blueprint > conecte este repositório.
+# Depois, no painel do serviço, adicione a variável FIREBASE_SERVICE_ACCOUNT
+# (marcada como secreta) com o conteúdo do service-account.json em uma linha.
+services:
+  - type: web
+    name: notificador-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
