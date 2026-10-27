@@ -33,7 +33,7 @@ async function requireUser(req, res, next) {
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.post('/send', requireUser, async (req, res) => {
-  const { groupCode, deviceIds, title, body, fromDeviceId } = req.body || {};
+  const { groupCode, deviceIds, title, body, fromDeviceId, messageId } = req.body || {};
   if (typeof groupCode !== 'string' || !/^[A-Z0-9]{8,32}$/.test(groupCode)) {
     return res.status(400).json({ error: 'groupCode inválido' });
   }
@@ -60,7 +60,7 @@ app.post('/send', requireUser, async (req, res) => {
     const messages = targets.map(({ token }) => ({
       token,
       notification: { title: String(title || 'Nova mensagem').slice(0, 200), body: body.slice(0, 2000) },
-      data: { fromDeviceId: String(fromDeviceId || '') },
+      data: { fromDeviceId: String(fromDeviceId || ''), messageId: String(messageId || '') },
       android: { priority: 'high', notification: { channelId: 'mensagens' } },
     }));
     const { responses } = await getMessaging().sendEach(messages);
